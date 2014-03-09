@@ -7,14 +7,32 @@
 
 module Authorities.Schema where
 
--- import Database.Persist hiding ((==.))
--- import Database.Persist.Sql
 import Database.Persist.TH
 import Data.Text
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Person
     name Text
-    UniqueName name
+    UniquePerson name
     deriving Show
+
+Group
+    name Text
+    UniqueGroup name
+    deriving Show
+
+Authority
+    name Text
+    UniqueAuthority name
+    deriving Show
+
+PersonGroup
+    personId PersonId
+    groupId  GroupId
+    UniquePersonGroup personId groupId
+
+GroupAuthority
+    groupId     GroupId
+    authorityId AuthorityId
+    UniqueGroupAuthority groupId authorityId
 |]

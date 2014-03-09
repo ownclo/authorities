@@ -7,6 +7,7 @@ import Authorities.Schema
 import Database.Persist.Postgresql
 import Control.Monad.IO.Class( liftIO )
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text.IO as TIO
 
 -- typically provided as YAML config file.
 connstr :: ConnectionString
@@ -27,4 +28,4 @@ main = withPostgresqlPool connstr 10 $ \pool ->
         -- _janeId <- insert $ Person "Jane Doe"
 
         people <- selectList [] [Asc PersonName]
-        liftIO $ print people
+        liftIO $ mapM_ (TIO.putStrLn . personName . entityVal) people
