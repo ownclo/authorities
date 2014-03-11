@@ -5,10 +5,14 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Authorities.Schema where
 
 import Database.Persist.TH
 import Data.Text
+import Authorities.Join
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Person
@@ -36,3 +40,11 @@ GroupAuthority
     authorityId AuthorityId
     UniqueGroupAuthority groupId authorityId
 |]
+
+instance LeftJoined Person PersonGroup where
+        leftId = PersonGroupPersonId
+
+instance RightJoined PersonGroup Group where
+        rightId = PersonGroupGroupId
+
+instance Joined Person PersonGroup Group
