@@ -12,6 +12,10 @@ import Database.Esqueleto
 --  + List of all authorities that a given group has
 --  - List of all people that has given authority
 --  - List of all authorities for particular person
+--  - Delete person. Remove person from PersonGroup
+--  - Delete group. Remove group from both PersonGroup
+--    and GroupAuthority.
+--  - Delete authority. Clean up GroupAuthority join.
 
 -- XXX: Need to support referential integrity of the
 -- database while removing entities. If one removes a
@@ -50,7 +54,7 @@ groupsWithAuthority (Entity akey _) = select . from . join $
     return group
 
 authoritiesForPerson :: Entity Person -> SqlPersistM [Entity Authority]
-authoritiesForPerson (Entity pkey _) = undefined
+authoritiesForPerson (Entity _pkey _) = undefined
 
 peopleWithAuthority :: Entity Authority -> SqlPersistM [Entity Person]
-peopleWithAuthority (Entity akey _) = undefined
+peopleWithAuthority (Entity _akey _) = undefined
