@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
-
+{-# LANGUAGE TupleSections #-}
 
 module Main where
 
@@ -14,6 +14,8 @@ import qualified Data.Text.IO as TIO
 
 import Control.Error( runMaybeT, MaybeT(..) )
 import Control.Monad( void )
+import Control.Arrow( (***) )
+import Data.Monoid
 
 -- typically provided as YAML config file.
 connstr :: ConnectionString
@@ -50,16 +52,32 @@ main = withPostgresqlPool connstr 10 $ \pool ->
         groups <- selectList [] [Asc GroupName]
         authorities <- selectList [] [Asc AuthorityName]
 
-        Just person <- selectFirst [] []
+        Just person    <- selectFirst [] []
+        Just group     <- selectFirst [] []
+        Just authority <- selectFirst [] []
+
+        -- Heart of the app, queries
         personGroups <- groupsForPerson person
+        groupPeople <- peopleInGroup group
+        groupAuthorities <- authoritiesForGroup group
+        authorityGroups <- groupsWithAuthority authority
 
-        Just group <- selectFirst [] []
-        groupPeople <- peopleForGroup group
+        let showPerson = personName . entityVal
+            showGroup = groupName . entityVal
+            showAuthority = authorityName . entityVal
+            printPT (a, b) = TIO.putStrLn $ a <> " - " <> b
 
-        liftIO $ mapM_ (TIO.putStrLn . personName . entityVal) people
-        liftIO $ mapM_ (TIO.putStrLn . groupName . entityVal) groups
-        liftIO $ mapM_ (TIO.putStrLn . authorityName . entityVal) authorities
+        liftIO $ putStrLn "Simple one-table queries:"
+        liftIO $ mapM_ (TIO.putStrLn . showPerson) people
+        liftIO $ mapM_ (TIO.putStrLn . showGroup) groups
+        liftIO $ mapM_ (TIO.putStrLn . showAuthority) authorities
         liftIO $ putStrLn ""
 
-        liftIO $ mapM_ (TIO.putStrLn . groupName . entityVal) personGroups
-        liftIO $ mapM_ (TIO.putStrLn . personName . entityVal) groupPeople
+        liftIO $ putStrLn "Two-table JOINs: Person-Group"
+        liftIO $ mapM_ (printPT . (showPerson *** showGroup) . (person,)) personGroups
+        liftIO $ mapM_ (printPT . (showGroup *** showPerson) . (group,)) groupPeople
+        liftIO $ putStrLn ""
+
+        liftIO $ putStrLn "Two-table JOINs: Group-Authority"
+        liftIO $ mapM_ (printPT . (showGroup *** showAuthority) . (group,)) groupAuthorities
+        liftIO $ mapM_ (printPT . (showAuthority *** showGroup) . (authority,)) authorityGroups

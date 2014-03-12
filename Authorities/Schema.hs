@@ -48,3 +48,12 @@ instance RightJoined PersonGroup Group where
         rightId = PersonGroupGroupId
 
 instance Joined Person PersonGroup Group
+
+
+instance LeftJoined Group GroupAuthority where
+        leftId = GroupAuthorityGroupId
+
+instance RightJoined GroupAuthority Authority where
+        rightId = GroupAuthorityAuthorityId
+
+instance Joined Group GroupAuthority Authority
