@@ -14,7 +14,10 @@ import Database.Persist.TH
 import Data.Text
 import Authorities.Join
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+share [mkPersist sqlOnlySettings
+      ,mkMigrate "migrateAll"
+      ,mkDeleteCascade sqlOnlySettings]
+      [persistLowerCase|
 Person
     name Text
     UniquePerson name
@@ -31,13 +34,13 @@ Authority
     deriving Show
 
 PersonGroup
-    personId PersonId
-    groupId  GroupId
+    personId PersonId DeleteCascade
+    groupId  GroupId  DeleteCascade
     UniquePersonGroup personId groupId
 
 GroupAuthority
-    groupId     GroupId
-    authorityId AuthorityId
+    groupId     GroupId     DeleteCascade
+    authorityId AuthorityId DeleteCascade
     UniqueGroupAuthority groupId authorityId
 |]
 

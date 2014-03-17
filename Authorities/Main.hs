@@ -6,6 +6,7 @@ module Main where
 
 import Authorities.Schema
 import Authorities.Queries
+import Database.Esqueleto
 
 import Database.Persist.Postgresql
 import Control.Monad.IO.Class( liftIO )
@@ -16,6 +17,7 @@ import Control.Error( runMaybeT, MaybeT(..) )
 import Control.Monad( void )
 import Control.Arrow( (***) )
 import Data.Monoid
+import Control.Monad.Trans( lift )
 
 -- typically provided as YAML config file.
 connstr :: ConnectionString
@@ -33,7 +35,7 @@ main = withPostgresqlPool connstr 10 $ \pool ->
         runMigration migrateAll
 
         -- Insert test relations if not present (abort on first fail).
-        _ <- runMaybeT $ do
+        void . runMaybeT $ do
           johnId <- MaybeT . insertUnique $ Person "John Doe"
           janeId <- MaybeT . insertUnique $ Person "Jane Doe"
 
@@ -48,6 +50,15 @@ main = withPostgresqlPool connstr 10 $ \pool ->
           void . MaybeT . insertUnique $ GroupAuthority stuff thoughts
           void . MaybeT . insertUnique $ GroupAuthority students education
 
+          -- XXX: These inserts are made for testing for repeated
+          -- authorities for a person. And vice-versa
+          void . MaybeT . insertUnique $ PersonGroup johnId stuff
+          void . MaybeT . insertUnique $ GroupAuthority students thoughts
+          void . MaybeT . insertUnique $ GroupAuthority stuff education
+
+          void . lift . deleteCascade $ janeId
+          void . lift . deleteCascade $ students
+
         people <- selectList [] [Asc PersonName]
         groups <- selectList [] [Asc GroupName]
         authorities <- selectList [] [Asc AuthorityName]
@@ -57,10 +68,12 @@ main = withPostgresqlPool connstr 10 $ \pool ->
         Just authority <- selectFirst [] []
 
         -- Heart of the app, queries
-        personGroups <- groupsForPerson person
-        groupPeople <- peopleInGroup group
-        groupAuthorities <- authoritiesForGroup group
-        authorityGroups <- groupsWithAuthority authority
+        personGroups      <- select $ groupsForPerson person
+        groupPeople       <- select $ peopleInGroup group
+        groupAuthorities  <- select $ authoritiesForGroup group
+        authorityGroups   <- select $ groupsWithAuthority authority
+        personAuthorities <- selectDistinct $ authoritiesForPerson person
+        authorityPeople   <- selectDistinct $ peopleWithAuthority authority
 
         let showPerson = personName . entityVal
             showGroup = groupName . entityVal
@@ -81,3 +94,8 @@ main = withPostgresqlPool connstr 10 $ \pool ->
         liftIO $ putStrLn "Two-table JOINs: Group-Authority"
         liftIO $ mapM_ (printPT . (showGroup *** showAuthority) . (group,)) groupAuthorities
         liftIO $ mapM_ (printPT . (showAuthority *** showGroup) . (authority,)) authorityGroups
+        liftIO $ putStrLn ""
+
+        liftIO $ putStrLn "Three-table JOINs: Person-Authority"
+        liftIO $ mapM_ (printPT . (showPerson *** showAuthority) . (person,)) personAuthorities
+        liftIO $ mapM_ (printPT . (showAuthority *** showPerson) . (authority,)) authorityPeople
