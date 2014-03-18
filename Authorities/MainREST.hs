@@ -71,8 +71,15 @@ main = PSQL.withPostgresqlPool connstr 10 $ \pool -> do
         get "/authority/:id/people"   $ undefined pool
 
 
-        {- POST REQUESTS -}
-        -- post new top-level entity. Will id be returned?
+        -- XXX: PUT is IDEMPOTENT, while POST is not.
+        -- "Use PUT when you can update a resource completely
+        -- through a specific resource location. ... If you do
+        -- not know the actual resource location, i.e. you do
+        -- not know where to store the new data, use POST to URL and
+        -- let the server decide where to store it".
+
+        {- PUT REQUESTS -}
+        -- put new top-level entity. Will id be returned?
         -- Is modification allowed? Use POST for that. For now,
         -- there is no data in top-level entities to modify.
         put "/person"    $ undefined pool
