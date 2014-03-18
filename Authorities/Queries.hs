@@ -5,24 +5,6 @@ import Authorities.Schema
 import Authorities.Join( join, EntityExpr )
 import Database.Esqueleto
 
--- TODO: The following queries need to be defined:
---  + List of all groups that a person belongs to
---  + List of all people belonging to given group
---  + List of all groups that have given authority
---  + List of all authorities that a given group has
---  + List of all people that has given authority
---  + List of all authorities for particular person
-
---  XXX: These deletions are typical cascading deletes.
---  Postgresql tables can be explicitly set up to delete
---  JOIN-table rows on deletion of referenced items.
---  Just use deleteCascade for deletions.
---
---  + Delete person. Remove person from PersonGroup
---  + Delete group. Remove group from both PersonGroup
---    and GroupAuthority.
---  + Delete authority. Clean up GroupAuthority join.
-
 -- NOTE: that '_gp :: EntityExpr PersonGroup' is used
 -- to disambiguate the join table used. Can I do better?
 

@@ -16,11 +16,21 @@ build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
 
-executable authorities
+library
+  Default-Language: Haskell2010
+  Exposed-modules:  Authorities.Schema,
+                    Authorities.Queries
+  ghc-options: -Wall
+  build-depends:       base >=4.5 && <4.7
+                     , persistent >= 1.3
+                     , persistent-template >= 1.3
+                     , persistent-postgresql >= 1.3
+                     , esqueleto >= 1.3
+                     , text >= 1.0
+                     , aeson >= 0.6
+
+executable authorities-test
   main-is:             Authorities/Main.hs
-  other-modules:       Authorities.Schema
-                     , Authorities.Queries
-  -- other-extensions:    
   ghc-options: -Wall
   build-depends:       base >=4.5 && <4.7
                      , mtl >= 2.0
@@ -28,9 +38,25 @@ executable authorities
                      , persistent-template >= 1.3
                      , persistent-postgresql >= 1.3
                      , esqueleto >= 1.3
-                     , transformers >= 0.3
+                     , errors >= 1.4
                      , text >= 1.0
                      , bytestring >= 0.10
-                     , errors >= 1.4
-  -- hs-source-dirs:      
+                     , transformers >= 0.3
+                     , aeson >= 0.6
+  default-language:    Haskell2010
+
+executable authorities-rest
+  main-is:             Authorities/MainREST.hs
+  ghc-options: -Wall
+  build-depends:       base >=4.5 && <4.7
+                     , persistent >= 1.3
+                     , persistent-template >= 1.3
+                     , persistent-postgresql >= 1.3
+                     , esqueleto >= 1.3
+                     , text >= 1.0
+                     , bytestring >= 0.10
+                     , transformers >= 0.3
+                     , scotty >= 0.6
+                     , aeson >= 0.6
+                     , wai-extra >= 2.0
   default-language:    Haskell2010

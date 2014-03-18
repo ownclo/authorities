@@ -12,6 +12,7 @@ module Authorities.Schema where
 
 import Database.Persist.TH
 import Data.Text
+import Data.Aeson
 import Authorities.Join
 
 share [mkPersist sqlOnlySettings
@@ -60,3 +61,15 @@ instance RightJoined GroupAuthority Authority where
         rightId = GroupAuthorityAuthorityId
 
 instance Joined Group GroupAuthority Authority
+
+instance ToJSON Person where
+    toJSON (Person name) = object
+        ["personName" .= name]
+
+instance ToJSON Group where
+    toJSON (Group name) = object
+        ["groupName" .= name]
+
+instance ToJSON Authority where
+    toJSON (Authority name) = object
+        ["authorityName" .= name]
