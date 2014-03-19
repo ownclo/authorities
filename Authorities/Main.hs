@@ -17,7 +17,7 @@ import Control.Error( runMaybeT, MaybeT(..) )
 import Control.Monad( void )
 import Control.Arrow( (***) )
 import Data.Monoid
-import Control.Monad.Trans( lift )
+-- import Control.Monad.Trans( lift )
 
 -- typically provided as YAML config file.
 connstr :: ConnectionString
@@ -58,8 +58,8 @@ main = runDB $ do
       void . MaybeT . insertUnique $ GroupAuthority students thoughts
       void . MaybeT . insertUnique $ GroupAuthority stuff education
 
-      void . lift . deleteCascade $ janeId
-      void . lift . deleteCascade $ students
+      -- void . lift . deleteCascade $ janeId
+      -- void . lift . deleteCascade $ students
 
     people <- selectList [] [Asc PersonName]
     groups <- selectList [] [Asc GroupName]

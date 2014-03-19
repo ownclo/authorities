@@ -6,14 +6,12 @@
 import Yesod
 import Authorities.Schema
 import Database.Persist.Postgresql as PSQL
+import qualified Data.Aeson as JSON
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy as LBS
-
-import Blaze.ByteString.Builder
-import Data.Aeson
-
 import Data.Conduit
 import qualified Data.Conduit.List as CL
+
+import Data.Monoid( (<>) )
 
 data Authorities = Authorities {
         connPool :: PSQL.ConnectionPool
@@ -38,17 +36,10 @@ getHomeR :: Handler Value
 getHomeR = returnJson $ Person "John Doe"
 
 getPeopleR :: Handler TypedContent
-getPeopleR = respondSourceDB "application/json" $
+getPeopleR = respondSourceDB typeJson $
     selectSource [] [Asc PersonName]
-    $= CL.map entityVal
-    $= sendJson
-
-sendJson :: (ToJSON v, Monad m) => Conduit v m (Flush Builder)
-sendJson = do
-    x <- await
-    sendLBS $ (encode x) `LBS.append` "\n"
-    yield Flush
- where sendLBS = yield . Chunk . fromLazyByteString
+    $= CL.map (JSON.encode . entityVal)
+    $= awaitForever (sendChunkLBS . (<> "\n"))
 
 connstr :: ConnectionString
 connstr = BS.unwords
