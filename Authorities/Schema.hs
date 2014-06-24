@@ -15,6 +15,9 @@ import Data.Text
 import Data.Aeson
 import Authorities.Join
 
+import Control.Applicative( (<$>) )
+import Control.Monad( mzero )
+
 share [mkPersist sqlOnlySettings
       ,mkMigrate "migrateAll"
       ,mkDeleteCascade sqlOnlySettings]
@@ -65,6 +68,10 @@ instance Joined Group GroupAuthority Authority
 instance ToJSON Person where
     toJSON (Person name) = object
         ["personName" .= name]
+
+instance FromJSON Person where
+        parseJSON (Object v) = Person <$> v .: "personName"
+        parseJSON _ = mzero
 
 instance ToJSON Group where
     toJSON (Group name) = object

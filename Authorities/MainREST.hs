@@ -12,6 +12,7 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 
 import Data.Monoid( (<>) )
+import Control.Applicative( (<$>) )
 
 data Authorities = Authorities {
         connPool :: PSQL.ConnectionPool
@@ -19,7 +20,8 @@ data Authorities = Authorities {
 
 mkYesod "Authorities" [parseRoutes|
 / HomeR GET
-/people PeopleR GET
+/people PeopleR GET POST
+/person/#PersonId PersonR GET
 |]
 
 instance Yesod Authorities
@@ -40,6 +42,27 @@ getPeopleR = respondSourceDB typeJson $
     selectSource [] [Asc PersonName]
     $= CL.map (JSON.encode . entityVal)
     $= awaitForever (sendChunkLBS . (<> "\n"))
+
+postPeopleR :: Handler ()
+postPeopleR = do
+    mperson <- JSON.fromJSON <$> requireJsonBody
+    case mperson of
+        JSON.Error _ -> {- TODO: HANDLE WRONG JSON -} undefined
+        JSON.Success person -> insertPerson person
+
+insertPerson :: Person -> Handler ()
+insertPerson person = do
+    mpid <- runDB $ insertUnique person
+    case mpid of
+        Nothing -> {- TODO: HANDLE DOUBLE INSERT -} undefined
+        Just personId -> redirect $ PersonR personId
+
+getPersonR :: PersonId -> Handler Value
+getPersonR personId = do
+    mperson <- runDB $ get personId
+    case mperson of
+        Nothing -> {- TODO: No such value in the DB -} undefined
+        Just person -> returnJson person
 
 connstr :: ConnectionString
 connstr = BS.unwords
